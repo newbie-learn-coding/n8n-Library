@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server';
-import { invalidateWorkflowDataCache, WORKFLOW_DATA_TAG } from '@/lib/data';
+import { NextResponse } from "next/server";
+import { invalidateWorkflowDataCache, WORKFLOW_DATA_TAG } from "@/lib/data";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 const SECRET =
   process.env.WORKFLOW_REVALIDATE_TOKEN ||
@@ -10,22 +10,30 @@ const SECRET =
   null;
 
 function isAuthorized(request: Request, url: URL): boolean {
-  if (!SECRET) return true;
-  const header = request.headers.get('authorization');
-  if (header && header.toLowerCase().startsWith('bearer ')) {
+  if (!SECRET) {
+    console.warn(
+      "[SECURITY] Revalidate endpoint: SECRET not configured, denying all requests",
+    );
+    return false;
+  }
+  const header = request.headers.get("authorization");
+  if (header && header.toLowerCase().startsWith("bearer ")) {
     const token = header.slice(7);
     if (token === SECRET) {
       return true;
     }
   }
-  const querySecret = url.searchParams.get('secret');
+  const querySecret = url.searchParams.get("secret");
   return querySecret === SECRET;
 }
 
 export async function POST(request: Request) {
   const url = new URL(request.url);
   if (!isAuthorized(request, url)) {
-    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json(
+      { success: false, error: "Unauthorized" },
+      { status: 401 },
+    );
   }
 
   let payload: Record<string, unknown> = {};
@@ -40,7 +48,8 @@ export async function POST(request: Request) {
   return NextResponse.json({
     success: true,
     tag: WORKFLOW_DATA_TAG,
-    datasetHash: typeof payload.datasetHash === 'string' ? payload.datasetHash : null,
+    datasetHash:
+      typeof payload.datasetHash === "string" ? payload.datasetHash : null,
     timestamp: new Date().toISOString(),
   });
 }
