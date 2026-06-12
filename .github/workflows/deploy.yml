@@ -20,14 +20,18 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Build
-        run: npm run build
+      - name: Build (static export)
+        # Skip build:data — it needs local data/raw/ (not in repo). The dataset is
+        # frozen and already committed under public/data, which `next build` reads.
+        run: |
+          npx next build
+          npx next-sitemap --config next-sitemap.config.js
 
       - name: Create Cloudflare Pages project (if not exists)
         uses: cloudflare/wrangler-action@v3
