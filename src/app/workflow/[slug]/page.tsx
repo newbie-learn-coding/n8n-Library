@@ -1,62 +1,58 @@
-import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
-import Link from 'next/link';
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import Link from "next/link";
 import {
   ChevronRight,
   ExternalLink,
   Box,
   GitFork,
   Calendar,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { QualityStars } from '@/components/workflow/QualityStars';
-import { CategoryBadge } from '@/components/workflow/CategoryBadge';
-import { TriggerBadge } from '@/components/workflow/TriggerBadge';
-import { IntegrationIcon } from '@/components/workflow/IntegrationIcon';
-import { WorkflowGrid } from '@/components/workflow/WorkflowGrid';
-import { WorkflowCanvas } from '@/components/workflow/WorkflowCanvas';
-import { PrerequisitesSection } from '@/components/workflow/PrerequisitesSection';
-import { UseCasesSection } from '@/components/workflow/UseCasesSection';
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { QualityStars } from "@/components/workflow/QualityStars";
+import { CategoryBadge } from "@/components/workflow/CategoryBadge";
+import { TriggerBadge } from "@/components/workflow/TriggerBadge";
+import { IntegrationIcon } from "@/components/workflow/IntegrationIcon";
+import { WorkflowGrid } from "@/components/workflow/WorkflowGrid";
+import { WorkflowCanvas } from "@/components/workflow/WorkflowCanvas";
+import { PrerequisitesSection } from "@/components/workflow/PrerequisitesSection";
+import { UseCasesSection } from "@/components/workflow/UseCasesSection";
 import {
-  getAllWorkflowSlugs,
   getWorkflowBySlug,
   getRelatedWorkflows,
-} from '@/lib/data';
+  getAllWorkflowSlugs,
+} from "@/lib/data";
 import {
   generateWorkflowMetadata,
   generateWorkflowJsonLd,
   generateBreadcrumbJsonLd,
-} from '@/lib/seo';
-import { formatDate } from '@/lib/utils';
-import { ImportActions, JsonCodePreview } from './client-components';
+} from "@/lib/seo";
+import { formatDate } from "@/lib/utils";
+import { ImportActions, JsonCodePreview } from "./client-components";
 
 interface WorkflowPageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
-}
-
-// Generate static paths for all workflows
-export async function generateStaticParams() {
-  const slugs = await getAllWorkflowSlugs();
-  return slugs.map((slug) => ({ slug }));
+  }>;
 }
 
 // Generate metadata
 export async function generateMetadata({
   params,
 }: WorkflowPageProps): Promise<Metadata> {
-  const workflow = await getWorkflowBySlug(params.slug);
+  const { slug } = await params;
+  const workflow = await getWorkflowBySlug(slug);
   if (!workflow) {
-    return { title: 'Workflow Not Found' };
+    return { title: "Workflow Not Found" };
   }
   return generateWorkflowMetadata(workflow);
 }
 
 export default async function WorkflowPage({ params }: WorkflowPageProps) {
-  const workflow = await getWorkflowBySlug(params.slug);
+  const { slug } = await params;
+  const workflow = await getWorkflowBySlug(slug);
 
   if (!workflow) {
     notFound();
@@ -67,9 +63,15 @@ export default async function WorkflowPage({ params }: WorkflowPageProps) {
   // JSON-LD structured data
   const workflowJsonLd = generateWorkflowJsonLd(workflow);
   const breadcrumbJsonLd = generateBreadcrumbJsonLd([
-    { name: 'Home', url: 'https://n8n-library.com/' },
-    { name: workflow.categoryName, url: `https://n8n-library.com/category/${workflow.category}/` },
-    { name: workflow.name, url: `https://n8n-library.com/workflow/${workflow.slug}/` },
+    { name: "Home", url: "https://n8n-library.com/" },
+    {
+      name: workflow.categoryName,
+      url: `https://n8n-library.com/category/${workflow.category}/`,
+    },
+    {
+      name: workflow.name,
+      url: `https://n8n-library.com/workflow/${workflow.slug}/`,
+    },
   ]);
 
   return (
@@ -87,7 +89,10 @@ export default async function WorkflowPage({ params }: WorkflowPageProps) {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           {/* Breadcrumb */}
           <nav className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-6 flex-wrap">
-            <Link href="/" className="hover:text-brand-600 dark:hover:text-brand-400">
+            <Link
+              href="/"
+              className="hover:text-brand-600 dark:hover:text-brand-400"
+            >
               Home
             </Link>
             <ChevronRight className="w-4 h-4 flex-shrink-0" />
@@ -98,7 +103,9 @@ export default async function WorkflowPage({ params }: WorkflowPageProps) {
               {workflow.categoryName}
             </Link>
             <ChevronRight className="w-4 h-4 flex-shrink-0" />
-            <span className="text-gray-900 dark:text-white truncate">{workflow.name}</span>
+            <span className="text-gray-900 dark:text-white truncate">
+              {workflow.name}
+            </span>
           </nav>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -112,16 +119,20 @@ export default async function WorkflowPage({ params }: WorkflowPageProps) {
                       slug={workflow.category}
                       name={workflow.categoryName}
                       icon={workflow.categoryIcon}
-                      color={`cat-${workflow.category.split('-')[0]}`}
+                      color={`cat-${workflow.category.split("-")[0]}`}
                     />
-                    {workflow.source === 'awesome' && (
+                    {workflow.source === "awesome" && (
                       <Badge variant="awesome">
                         <GitFork className="w-3 h-3 mr-1" />
                         Curated
                       </Badge>
                     )}
                   </div>
-                  <QualityStars quality={workflow.quality} size="md" showLabel />
+                  <QualityStars
+                    quality={workflow.quality}
+                    size="md"
+                    showLabel
+                  />
                 </div>
 
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-4">
@@ -173,14 +184,17 @@ export default async function WorkflowPage({ params }: WorkflowPageProps) {
               </div>
 
               {/* Prerequisites */}
-              <PrerequisitesSection workflow={workflow.workflow} className="mb-6" />
+              <PrerequisitesSection
+                workflow={workflow.workflow}
+                className="mb-6"
+              />
 
               {/* Use Cases */}
               <UseCasesSection
                 workflow={workflow.workflow}
                 workflowName={workflow.name}
                 category={workflow.category}
-                integrations={workflow.integrations.map(i => i.name)}
+                integrations={workflow.integrations.map((i) => i.name)}
                 className="mb-6"
               />
 
@@ -229,13 +243,17 @@ export default async function WorkflowPage({ params }: WorkflowPageProps) {
                       </dd>
                     </div>
                     <div className="flex items-center justify-between">
-                      <dt className="text-gray-500 dark:text-gray-400">Trigger</dt>
+                      <dt className="text-gray-500 dark:text-gray-400">
+                        Trigger
+                      </dt>
                       <dd>
                         <TriggerBadge trigger={workflow.triggerType} />
                       </dd>
                     </div>
                     <div className="flex items-center justify-between">
-                      <dt className="text-gray-500 dark:text-gray-400">Source</dt>
+                      <dt className="text-gray-500 dark:text-gray-400">
+                        Source
+                      </dt>
                       <dd className="font-medium text-gray-900 dark:text-white capitalize">
                         {workflow.source}
                       </dd>
@@ -258,7 +276,8 @@ export default async function WorkflowPage({ params }: WorkflowPageProps) {
                     Need Help?
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                    Check out the official n8n documentation for detailed guides.
+                    Check out the official n8n documentation for detailed
+                    guides.
                   </p>
                   <a
                     href="https://docs.n8n.io"
@@ -289,3 +308,10 @@ export default async function WorkflowPage({ params }: WorkflowPageProps) {
     </>
   );
 }
+
+export async function generateStaticParams() {
+  const slugs = await getAllWorkflowSlugs();
+  return slugs.map((slug) => ({ slug }));
+}
+
+export const dynamicParams = false;

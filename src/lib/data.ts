@@ -1,6 +1,3 @@
-import { promises as fs } from 'fs';
-import path from 'path';
-import { revalidateTag, unstable_cache } from 'next/cache';
 import type {
   WorkflowMeta,
   WorkflowDetail,
@@ -8,73 +5,73 @@ import type {
   IntegrationSummary,
   Stats,
   DatasetMeta,
-} from '@/types';
+} from "@/types";
 
-const DATA_DIR = path.join(process.cwd(), 'public/data');
-export const WORKFLOW_DATA_TAG = 'workflows-data';
+// Static imports for build-time data loading (works in Cloudflare Workers)
+import categoriesData from "../../public/data/categories.json";
+import integrationsData from "../../public/data/integrations.json";
+import integrationsTopData from "../../public/data/integrations_top.json";
+import statsData from "../../public/data/stats.json";
+import metaData from "../../public/data/meta.json";
+import indexData from "../../public/data/index.json";
 
-const readJsonCached = unstable_cache(
-  async (relativePath: string) => {
-    const filePath = path.join(DATA_DIR, relativePath);
-    const content = await fs.readFile(filePath, 'utf-8');
-    return JSON.parse(content);
-  },
-  ['data-json-reader'],
-  { tags: [WORKFLOW_DATA_TAG] }
-);
+// Type assertions for imported JSON
+const categories = categoriesData as Category[];
+const integrations = integrationsData as IntegrationSummary[];
+const integrationsTop = integrationsTopData as IntegrationSummary[];
+const stats = statsData as Stats;
+const meta = metaData as DatasetMeta;
+const allWorkflowsIndex = indexData as WorkflowMeta[];
 
-async function readJsonFile<T>(relativePath: string): Promise<T> {
+// For workflow details, we still need to fetch dynamically since there are thousands
+async function fetchWorkflowDetail(
+  slug: string,
+): Promise<WorkflowDetail | null> {
   try {
-    return (await readJsonCached(relativePath)) as T;
-  } catch (error) {
-    console.error(`Error loading data file ${relativePath}:`, error);
-    throw error;
+    // Use dynamic import for individual workflow files
+    const workflow = await import(`../../public/data/workflows/${slug}.json`);
+    return workflow.default as WorkflowDetail;
+  } catch {
+    return null;
   }
-}
-
-export function invalidateWorkflowDataCache() {
-  revalidateTag(WORKFLOW_DATA_TAG);
 }
 
 /**
  * Get all workflows metadata (search index)
  */
 export async function getAllWorkflows(): Promise<WorkflowMeta[]> {
-  return readJsonFile<WorkflowMeta[]>('index.json');
+  return allWorkflowsIndex;
 }
 
 /**
  * Get workflow detail by slug
  */
-export async function getWorkflowBySlug(slug: string): Promise<WorkflowDetail | null> {
-  try {
-    return await readJsonFile<WorkflowDetail>(path.join('workflows', `${slug}.json`));
-  } catch (error) {
-    console.error(`Error loading workflow ${slug}:`, error);
-    return null;
-  }
+export async function getWorkflowBySlug(
+  slug: string,
+): Promise<WorkflowDetail | null> {
+  return fetchWorkflowDetail(slug);
 }
 
 /**
  * Get all workflow slugs for static generation
  */
 export async function getAllWorkflowSlugs(): Promise<string[]> {
-  const workflows = await getAllWorkflows();
-  return workflows.map((w) => w.slug);
+  return allWorkflowsIndex.map((w) => w.slug);
 }
 
 /**
  * Get all categories
  */
 export async function getCategories(): Promise<Category[]> {
-  return readJsonFile<Category[]>('categories.json');
+  return categories;
 }
 
 /**
  * Get category by slug
  */
-export async function getCategoryBySlug(slug: string): Promise<Category | null> {
-  const categories = await getCategories();
+export async function getCategoryBySlug(
+  slug: string,
+): Promise<Category | null> {
   return categories.find((c) => c.slug === slug) || null;
 }
 
@@ -82,55 +79,62 @@ export async function getCategoryBySlug(slug: string): Promise<Category | null> 
  * Get all integrations
  */
 export async function getIntegrations(): Promise<IntegrationSummary[]> {
-  return readJsonFile<IntegrationSummary[]>('integrations.json');
+  return integrations;
 }
 
 /**
  * Get featured/top integrations subset
  */
-export async function getTopIntegrations(limit?: number): Promise<IntegrationSummary[]> {
-  const top = await readJsonFile<IntegrationSummary[]>('integrations_top.json');
-  if (typeof limit === 'number') {
-    return top.slice(0, limit);
+export async function getTopIntegrations(
+  limit?: number,
+): Promise<IntegrationSummary[]> {
+  if (typeof limit === "number") {
+    return integrationsTop.slice(0, limit);
   }
-  return top;
+  return integrationsTop;
 }
 
 /**
  * Get integration by slug
  */
-export async function getIntegrationBySlug(slug: string): Promise<IntegrationSummary | null> {
-  const integrations = await getIntegrations();
+export async function getIntegrationBySlug(
+  slug: string,
+): Promise<IntegrationSummary | null> {
   return integrations.find((i) => i.slug === slug) || null;
 }
 
 /**
  * Get workflows by category
  */
-export async function getWorkflowsByCategory(categorySlug: string): Promise<WorkflowMeta[]> {
-  const workflows = await getAllWorkflows();
-  return workflows.filter((w) => w.category === categorySlug);
+export async function getWorkflowsByCategory(
+  categorySlug: string,
+): Promise<WorkflowMeta[]> {
+  return allWorkflowsIndex.filter((w) => w.category === categorySlug);
 }
 
 /**
  * Get workflows by integration
  */
-export async function getWorkflowsByIntegration(integrationSlug: string): Promise<WorkflowMeta[]> {
-  const workflows = await getAllWorkflows();
-  return workflows.filter((w) => w.integrations.includes(integrationSlug));
+export async function getWorkflowsByIntegration(
+  integrationSlug: string,
+): Promise<WorkflowMeta[]> {
+  return allWorkflowsIndex.filter((w) =>
+    w.integrations.includes(integrationSlug),
+  );
 }
 
 /**
  * Get featured workflows (high quality, curated)
  */
-export async function getFeaturedWorkflows(limit: number = 12): Promise<WorkflowMeta[]> {
-  const workflows = await getAllWorkflows();
-  return workflows
+export async function getFeaturedWorkflows(
+  limit: number = 12,
+): Promise<WorkflowMeta[]> {
+  return allWorkflowsIndex
     .filter((w) => w.quality >= 4)
     .sort((a, b) => {
       // Prioritize awesome source
-      if (a.source === 'awesome' && b.source !== 'awesome') return -1;
-      if (a.source !== 'awesome' && b.source === 'awesome') return 1;
+      if (a.source === "awesome" && b.source !== "awesome") return -1;
+      if (a.source !== "awesome" && b.source === "awesome") return 1;
       // Then by quality
       return b.quality - a.quality;
     })
@@ -141,24 +145,14 @@ export async function getFeaturedWorkflows(limit: number = 12): Promise<Workflow
  * Get stats
  */
 export async function getStats(): Promise<Stats | null> {
-  try {
-    return await readJsonFile<Stats>('stats.json');
-  } catch (error) {
-    console.error('Error loading stats:', error);
-    return null;
-  }
+  return stats;
 }
 
 /**
  * Get dataset metadata (hashes, cache stats)
  */
 export async function getDatasetMeta(): Promise<DatasetMeta | null> {
-  try {
-    return await readJsonFile<DatasetMeta>('meta.json');
-  } catch (error) {
-    console.error('Error loading dataset meta:', error);
-    return null;
-  }
+  return meta;
 }
 
 /**
@@ -166,71 +160,60 @@ export async function getDatasetMeta(): Promise<DatasetMeta | null> {
  */
 export async function getRelatedWorkflows(
   workflow: WorkflowDetail,
-  limit: number = 6
+  limit: number = 6,
 ): Promise<WorkflowMeta[]> {
-  try {
-    const allWorkflows = await getAllWorkflows();
+  // Score each workflow by relevance
+  const scored = allWorkflowsIndex
+    .filter((w) => w.slug !== workflow.slug)
+    .map((w) => {
+      let score = 0;
+      // Same category
+      if (w.category === workflow.category) score += 3;
+      // Shared integrations
+      const sharedIntegrations = w.integrations.filter((i) =>
+        workflow.integrations.some((wi) => wi.slug === i),
+      ).length;
+      score += sharedIntegrations * 2;
+      // Same trigger type
+      if (w.triggerType === workflow.triggerType) score += 1;
+      // Quality bonus
+      score += w.quality;
+      return { workflow: w, score };
+    })
+    .sort((a, b) => b.score - a.score);
 
-    // Score each workflow by relevance
-    const scored = allWorkflows
-      .filter((w) => w.slug !== workflow.slug)
-      .map((w) => {
-        let score = 0;
-        // Same category
-        if (w.category === workflow.category) score += 3;
-        // Shared integrations
-        const sharedIntegrations = w.integrations.filter((i) =>
-          workflow.integrations.some((wi) => wi.slug === i)
-        ).length;
-        score += sharedIntegrations * 2;
-        // Same trigger type
-        if (w.triggerType === workflow.triggerType) score += 1;
-        // Quality bonus
-        score += w.quality;
-        return { workflow: w, score };
-      })
-      .sort((a, b) => b.score - a.score);
-
-    return scored.slice(0, limit).map((s) => s.workflow);
-  } catch (error) {
-    console.error('Error getting related workflows:', error);
-    return [];
-  }
+  return scored.slice(0, limit).map((s) => s.workflow);
 }
 
 /**
  * Get latest added workflows (sorted by createdAt)
  */
-export async function getLatestWorkflows(limit: number = 12): Promise<WorkflowMeta[]> {
-  try {
-    const workflows = await getAllWorkflows();
-    return workflows
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, limit);
-  } catch (error) {
-    console.error('Error getting latest workflows:', error);
-    return [];
-  }
+export async function getLatestWorkflows(
+  limit: number = 12,
+): Promise<WorkflowMeta[]> {
+  return [...allWorkflowsIndex]
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    )
+    .slice(0, limit);
 }
 
 /**
  * Search workflows (basic server-side search for initial load)
  */
-export async function searchWorkflows(query: string, limit: number = 50): Promise<WorkflowMeta[]> {
-  try {
-    const workflows = await getAllWorkflows();
-    const lowerQuery = query.toLowerCase();
+export async function searchWorkflows(
+  query: string,
+  limit: number = 50,
+): Promise<WorkflowMeta[]> {
+  const lowerQuery = query.toLowerCase();
 
-    return workflows
-      .filter(
-        (w) =>
-          w.name.toLowerCase().includes(lowerQuery) ||
-          w.description.toLowerCase().includes(lowerQuery) ||
-          w.integrations.some((i) => i.includes(lowerQuery))
-      )
-      .slice(0, limit);
-  } catch (error) {
-    console.error('Error searching workflows:', error);
-    return [];
-  }
+  return allWorkflowsIndex
+    .filter(
+      (w) =>
+        w.name.toLowerCase().includes(lowerQuery) ||
+        w.description.toLowerCase().includes(lowerQuery) ||
+        w.integrations.some((i) => i.includes(lowerQuery)),
+    )
+    .slice(0, limit);
 }
