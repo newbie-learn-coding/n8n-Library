@@ -1,6 +1,6 @@
-import Link from 'next/link';
-import { Home, Search } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import Link from "next/link";
+import { Home, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function NotFound() {
   return (
@@ -13,7 +13,8 @@ export default function NotFound() {
           Page Not Found
         </h1>
         <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-md mx-auto">
-          Sorry, we couldn&apos;t find the page you&apos;re looking for. The workflow may have been moved or doesn&apos;t exist.
+          Sorry, we couldn&apos;t find the page you&apos;re looking for. The
+          workflow may have been moved or doesn&apos;t exist.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-4">
           <Link href="/">

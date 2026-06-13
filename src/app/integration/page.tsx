@@ -1,13 +1,13 @@
-import type { Metadata } from 'next';
-import Link from 'next/link';
-import { IntegrationIcon } from '@/components/workflow/IntegrationIcon';
-import { SearchBar } from '@/components/workflow/SearchBar';
-import { getIntegrations } from '@/lib/data';
+import type { Metadata } from "next";
+import Link from "next/link";
+import { IntegrationIcon } from "@/components/workflow/IntegrationIcon";
+import { SearchBar } from "@/components/workflow/SearchBar";
+import { getIntegrations } from "@/lib/data";
 
 export const metadata: Metadata = {
-  title: 'Integrations - Browse Workflows by App',
+  title: "Integrations - Browse Workflows by App",
   description:
-    'Browse n8n workflow templates by integration. Find automation templates for Slack, Telegram, Gmail, Google Sheets, OpenAI, and 150+ more apps and services.',
+    "Browse n8n workflow templates by integration. Find automation templates for Slack, Telegram, Gmail, Google Sheets, OpenAI, and 150+ more apps and services.",
 };
 
 export default async function IntegrationsPage() {
@@ -23,7 +23,7 @@ export default async function IntegrationsPage() {
       acc[letter].push(integration);
       return acc;
     },
-    {} as Record<string, typeof integrations>
+    {} as Record<string, typeof integrations>,
   );
 
   const letters = Object.keys(groupedIntegrations).sort();
@@ -37,7 +37,8 @@ export default async function IntegrationsPage() {
             Browse by Integration
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto mb-8">
-            Find n8n workflow templates for your favorite apps and services. We support {integrations.length}+ integrations.
+            Find n8n workflow templates for your favorite apps and services. We
+            support {integrations.length}+ integrations.
           </p>
 
           {/* Search */}
@@ -96,13 +97,13 @@ export default async function IntegrationsPage() {
         {/* Additional info */}
         <div className="mt-16 text-center">
           <p className="text-gray-500 dark:text-gray-400 text-sm">
-            Missing an integration?{' '}
+            Missing an integration?{" "}
             <a
               href="/submit/"
               className="text-brand-600 dark:text-brand-400 hover:underline"
             >
               Submit a workflow
-            </a>{' '}
+            </a>{" "}
             using your favorite app.
           </p>
         </div>

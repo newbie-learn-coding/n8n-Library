@@ -1,49 +1,47 @@
-import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
-import Link from 'next/link';
-import { ArrowLeft, ChevronRight, Zap, CheckCircle2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { WorkflowGrid } from '@/components/workflow/WorkflowGrid';
-import { SearchBar } from '@/components/workflow/SearchBar';
-import { IntegrationIcon } from '@/components/workflow/IntegrationIcon';
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import { ArrowLeft, ChevronRight, Zap, CheckCircle2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { WorkflowGrid } from "@/components/workflow/WorkflowGrid";
+import { SearchBar } from "@/components/workflow/SearchBar";
+import { IntegrationIcon } from "@/components/workflow/IntegrationIcon";
 import {
   getIntegrations,
   getIntegrationBySlug,
   getWorkflowsByIntegration,
-} from '@/lib/data';
-import { generateIntegrationMetadata, generateBreadcrumbJsonLd } from '@/lib/seo';
+} from "@/lib/data";
+import {
+  generateIntegrationMetadata,
+  generateBreadcrumbJsonLd,
+} from "@/lib/seo";
 
 interface IntegrationPageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
-}
-
-// Generate static paths for top integrations
-export async function generateStaticParams() {
-  const integrations = await getIntegrations();
-  // Generate pages for all integrations
-  return integrations.map((integration) => ({
-    slug: integration.slug,
-  }));
+  }>;
 }
 
 // Generate metadata
 export async function generateMetadata({
   params,
 }: IntegrationPageProps): Promise<Metadata> {
-  const integration = await getIntegrationBySlug(params.slug);
+  const { slug } = await params;
+  const integration = await getIntegrationBySlug(slug);
   if (!integration) {
-    return { title: 'Integration Not Found' };
+    return { title: "Integration Not Found" };
   }
   return generateIntegrationMetadata(integration);
 }
 
-export default async function IntegrationPage({ params }: IntegrationPageProps) {
+export default async function IntegrationPage({
+  params,
+}: IntegrationPageProps) {
+  const { slug } = await params;
   const [integration, workflows, allIntegrations] = await Promise.all([
-    getIntegrationBySlug(params.slug),
-    getWorkflowsByIntegration(params.slug),
+    getIntegrationBySlug(slug),
+    getWorkflowsByIntegration(slug),
     getIntegrations(),
   ]);
 
@@ -53,9 +51,12 @@ export default async function IntegrationPage({ params }: IntegrationPageProps) 
 
   // Breadcrumb JSON-LD
   const breadcrumbJsonLd = generateBreadcrumbJsonLd([
-    { name: 'Home', url: 'https://n8n-library.com/' },
-    { name: 'Integrations', url: 'https://n8n-library.com/integration/' },
-    { name: integration.name, url: `https://n8n-library.com/integration/${integration.slug}/` },
+    { name: "Home", url: "https://n8n-library.com/" },
+    { name: "Integrations", url: "https://n8n-library.com/integration/" },
+    {
+      name: integration.name,
+      url: `https://n8n-library.com/integration/${integration.slug}/`,
+    },
   ]);
 
   // Get related integrations (same categories, exclude current)
@@ -63,7 +64,7 @@ export default async function IntegrationPage({ params }: IntegrationPageProps) 
     .filter(
       (i) =>
         i.slug !== integration.slug &&
-        i.categories.some((c) => integration.categories.includes(c))
+        i.categories.some((c) => integration.categories.includes(c)),
     )
     .slice(0, 6);
 
@@ -78,15 +79,23 @@ export default async function IntegrationPage({ params }: IntegrationPageProps) 
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           {/* Breadcrumb */}
           <nav className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-6">
-            <Link href="/" className="hover:text-brand-600 dark:hover:text-brand-400">
+            <Link
+              href="/"
+              className="hover:text-brand-600 dark:hover:text-brand-400"
+            >
               Home
             </Link>
             <ChevronRight className="w-4 h-4" />
-            <Link href="/integration/" className="hover:text-brand-600 dark:hover:text-brand-400">
+            <Link
+              href="/integration/"
+              className="hover:text-brand-600 dark:hover:text-brand-400"
+            >
               Integrations
             </Link>
             <ChevronRight className="w-4 h-4" />
-            <span className="text-gray-900 dark:text-white">{integration.name}</span>
+            <span className="text-gray-900 dark:text-white">
+              {integration.name}
+            </span>
           </nav>
 
           {/* Header */}
@@ -104,7 +113,8 @@ export default async function IntegrationPage({ params }: IntegrationPageProps) 
                   {integration.name} Workflows
                 </h1>
                 <p className="text-lg text-gray-600 dark:text-gray-400">
-                  Discover n8n automation templates using {integration.name}. Ready to import and customize.
+                  Discover n8n automation templates using {integration.name}.
+                  Ready to import and customize.
                 </p>
               </div>
             </div>
@@ -114,7 +124,7 @@ export default async function IntegrationPage({ params }: IntegrationPageProps) 
               <p className="text-gray-500 dark:text-gray-400">
                 <span className="font-semibold text-gray-900 dark:text-white">
                   {integration.count}
-                </span>{' '}
+                </span>{" "}
                 workflow templates available
               </p>
               <div className="w-full sm:w-auto sm:min-w-[300px]">
@@ -141,29 +151,44 @@ export default async function IntegrationPage({ params }: IntegrationPageProps) 
                 Automate {integration.name} with n8n
               </h2>
               <p className="text-gray-600 dark:text-gray-400 text-lg leading-relaxed mb-6">
-                {integration.name} is one of the most popular integrations in the n8n ecosystem.
-                With <strong>{integration.count} ready-to-use templates</strong>, you can connect {integration.name} to
-                hundreds of other apps and services without writing a single line of code.
+                {integration.name} is one of the most popular integrations in
+                the n8n ecosystem. With{" "}
+                <strong>{integration.count} ready-to-use templates</strong>, you
+                can connect {integration.name} to hundreds of other apps and
+                services without writing a single line of code.
               </p>
               <p className="text-gray-600 dark:text-gray-400 text-lg leading-relaxed mb-8">
-                These workflows are built by the community and cover everything from simple data syncs
-                to complex multi-step automations. Each template is free to download, import into n8n,
-                and customize for your specific needs.
+                These workflows are built by the community and cover everything
+                from simple data syncs to complex multi-step automations. Each
+                template is free to download, import into n8n, and customize for
+                your specific needs.
               </p>
 
               {/* Quick Stats */}
               <div className="grid grid-cols-3 gap-4 mb-8">
                 <Card className="p-4 text-center">
-                  <div className="text-2xl font-bold text-brand-600 dark:text-brand-400">{integration.count}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">Templates</div>
+                  <div className="text-2xl font-bold text-brand-600 dark:text-brand-400">
+                    {integration.count}
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    Templates
+                  </div>
                 </Card>
                 <Card className="p-4 text-center">
-                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">Free</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">100% Free</div>
+                  <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                    Free
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    100% Free
+                  </div>
                 </Card>
                 <Card className="p-4 text-center">
-                  <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">1-Click</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">Import</div>
+                  <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                    1-Click
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    Import
+                  </div>
                 </Card>
               </div>
 
@@ -173,34 +198,46 @@ export default async function IntegrationPage({ params }: IntegrationPageProps) 
               </h3>
               <div className="space-y-4 mb-8">
                 <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-8 h-8 bg-brand-500 text-white rounded-full flex items-center justify-center font-bold text-sm">1</div>
+                  <div className="flex-shrink-0 w-8 h-8 bg-brand-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                    1
+                  </div>
                   <div>
                     <p className="text-gray-700 dark:text-gray-300">
-                      <strong>Find a template</strong> that matches your use case from the list above.
+                      <strong>Find a template</strong> that matches your use
+                      case from the list above.
                     </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-8 h-8 bg-brand-500 text-white rounded-full flex items-center justify-center font-bold text-sm">2</div>
+                  <div className="flex-shrink-0 w-8 h-8 bg-brand-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                    2
+                  </div>
                   <div>
                     <p className="text-gray-700 dark:text-gray-300">
-                      <strong>Download the JSON file</strong> from the workflow detail page.
+                      <strong>Download the JSON file</strong> from the workflow
+                      detail page.
                     </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-8 h-8 bg-brand-500 text-white rounded-full flex items-center justify-center font-bold text-sm">3</div>
+                  <div className="flex-shrink-0 w-8 h-8 bg-brand-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                    3
+                  </div>
                   <div>
                     <p className="text-gray-700 dark:text-gray-300">
-                      <strong>Import into n8n</strong> - go to Workflows → Import from File.
+                      <strong>Import into n8n</strong> - go to Workflows →
+                      Import from File.
                     </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-8 h-8 bg-brand-500 text-white rounded-full flex items-center justify-center font-bold text-sm">4</div>
+                  <div className="flex-shrink-0 w-8 h-8 bg-brand-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                    4
+                  </div>
                   <div>
                     <p className="text-gray-700 dark:text-gray-300">
-                      <strong>Add your {integration.name} credentials</strong> and configure the workflow.
+                      <strong>Add your {integration.name} credentials</strong>{" "}
+                      and configure the workflow.
                     </p>
                   </div>
                 </div>
@@ -214,25 +251,37 @@ export default async function IntegrationPage({ params }: IntegrationPageProps) 
                 <li className="flex items-start gap-3">
                   <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                   <span className="text-gray-600 dark:text-gray-400">
-                    <strong className="text-gray-900 dark:text-white">Save hours every week</strong> by automating repetitive tasks
+                    <strong className="text-gray-900 dark:text-white">
+                      Save hours every week
+                    </strong>{" "}
+                    by automating repetitive tasks
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                   <span className="text-gray-600 dark:text-gray-400">
-                    <strong className="text-gray-900 dark:text-white">Connect to 400+ apps</strong> - n8n integrates with virtually everything
+                    <strong className="text-gray-900 dark:text-white">
+                      Connect to 400+ apps
+                    </strong>{" "}
+                    - n8n integrates with virtually everything
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                   <span className="text-gray-600 dark:text-gray-400">
-                    <strong className="text-gray-900 dark:text-white">No coding required</strong> - visual workflow builder makes it easy
+                    <strong className="text-gray-900 dark:text-white">
+                      No coding required
+                    </strong>{" "}
+                    - visual workflow builder makes it easy
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                   <span className="text-gray-600 dark:text-gray-400">
-                    <strong className="text-gray-900 dark:text-white">Self-host for free</strong> - keep your data on your own servers
+                    <strong className="text-gray-900 dark:text-white">
+                      Self-host for free
+                    </strong>{" "}
+                    - keep your data on your own servers
                   </span>
                 </li>
               </ul>
@@ -243,16 +292,26 @@ export default async function IntegrationPage({ params }: IntegrationPageProps) 
                   <Zap className="w-6 h-6 text-brand-600 dark:text-brand-400 flex-shrink-0" />
                   <div>
                     <p className="text-gray-700 dark:text-gray-300 mb-2">
-                      <strong className="text-gray-900 dark:text-white">New to n8n?</strong>{' '}
-                      Get started in 5 minutes. Download the{' '}
-                      <a href="https://n8n.io" target="_blank" rel="noopener noreferrer" className="text-brand-600 dark:text-brand-400 hover:underline">
+                      <strong className="text-gray-900 dark:text-white">
+                        New to n8n?
+                      </strong>{" "}
+                      Get started in 5 minutes. Download the{" "}
+                      <a
+                        href="https://n8n.io"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-brand-600 dark:text-brand-400 hover:underline"
+                      >
                         n8n desktop app
-                      </a>{' '}
+                      </a>{" "}
                       or self-host with Docker.
                     </p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Questions? Contact us at{' '}
-                      <a href="mailto:auto@n8n-library.com" className="text-brand-600 dark:text-brand-400 hover:underline">
+                      Questions? Contact us at{" "}
+                      <a
+                        href="mailto:auto@n8n-library.com"
+                        className="text-brand-600 dark:text-brand-400 hover:underline"
+                      >
                         auto@n8n-library.com
                       </a>
                     </p>
@@ -306,3 +365,12 @@ export default async function IntegrationPage({ params }: IntegrationPageProps) 
     </>
   );
 }
+
+export async function generateStaticParams() {
+  const integrations = await getIntegrations();
+  return integrations.map((integration) => ({
+    slug: integration.slug,
+  }));
+}
+
+export const dynamicParams = false;

@@ -1,11 +1,11 @@
-import type { Metadata } from 'next';
-import { CategoryGrid } from '@/components/workflow/CategoryCard';
-import { getCategories } from '@/lib/data';
+import type { Metadata } from "next";
+import { CategoryGrid } from "@/components/workflow/CategoryCard";
+import { getCategories } from "@/lib/data";
 
 export const metadata: Metadata = {
-  title: 'Workflow Categories - Browse by Use Case',
+  title: "Workflow Categories - Browse by Use Case",
   description:
-    'Browse n8n workflow templates organized by category. Find automation templates for AI, communication, productivity, DevOps, CRM, e-commerce, and more.',
+    "Browse n8n workflow templates organized by category. Find automation templates for AI, communication, productivity, DevOps, CRM, e-commerce, and more.",
 };
 
 export default async function CategoriesPage() {
@@ -20,7 +20,9 @@ export default async function CategoriesPage() {
             Browse by Category
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Explore our collection of n8n workflow templates organized by use case. Each category contains curated and community automation templates.
+            Explore our collection of n8n workflow templates organized by use
+            case. Each category contains curated and community automation
+            templates.
           </p>
         </div>
 
@@ -30,14 +32,14 @@ export default async function CategoriesPage() {
         {/* Additional info */}
         <div className="mt-16 text-center">
           <p className="text-gray-500 dark:text-gray-400 text-sm">
-            Can&apos;t find what you&apos;re looking for?{' '}
+            Can&apos;t find what you&apos;re looking for?{" "}
             <a
               href="/search/"
               className="text-brand-600 dark:text-brand-400 hover:underline"
             >
               Try searching
-            </a>{' '}
-            or{' '}
+            </a>{" "}
+            or{" "}
             <a
               href="/submit/"
               className="text-brand-600 dark:text-brand-400 hover:underline"

@@ -1,13 +1,19 @@
-import type { Metadata } from 'next';
-import Link from 'next/link';
-import { GitFork, FileJson, CheckCircle, ExternalLink, ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import type { Metadata } from "next";
+import Link from "next/link";
+import {
+  GitFork,
+  FileJson,
+  CheckCircle,
+  ExternalLink,
+  ArrowRight,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 export const metadata: Metadata = {
-  title: 'Submit a Workflow',
+  title: "Submit a Workflow",
   description:
-    'Share your n8n workflow templates with the community. Learn how to submit your automation workflows to n8n Library.',
+    "Share your n8n workflow templates with the community. Learn how to submit your automation workflows to n8n Library.",
 };
 
 export default function SubmitPage() {
@@ -37,7 +43,8 @@ export default function SubmitPage() {
                   Option 1: GitHub Pull Request (Recommended)
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400 mb-4">
-                  Submit your workflow directly to our curated awesome-n8n-templates repository.
+                  Submit your workflow directly to our curated
+                  awesome-n8n-templates repository.
                 </p>
 
                 <ol className="space-y-4 mb-6">
@@ -47,7 +54,7 @@ export default function SubmitPage() {
                     </span>
                     <div>
                       <p className="text-gray-700 dark:text-gray-300">
-                        <strong>Fork</strong> the{' '}
+                        <strong>Fork</strong> the{" "}
                         <a
                           href="https://github.com/enescingoz/awesome-n8n-templates"
                           target="_blank"
@@ -55,7 +62,7 @@ export default function SubmitPage() {
                           className="text-brand-600 dark:text-brand-400 hover:underline"
                         >
                           awesome-n8n-templates
-                        </a>{' '}
+                        </a>{" "}
                         repository
                       </p>
                     </div>
@@ -76,7 +83,8 @@ export default function SubmitPage() {
                     </span>
                     <div>
                       <p className="text-gray-700 dark:text-gray-300">
-                        <strong>Add</strong> your JSON file to the appropriate category folder
+                        <strong>Add</strong> your JSON file to the appropriate
+                        category folder
                       </p>
                     </div>
                   </li>
@@ -86,7 +94,8 @@ export default function SubmitPage() {
                     </span>
                     <div>
                       <p className="text-gray-700 dark:text-gray-300">
-                        <strong>Create</strong> a pull request with a description of your workflow
+                        <strong>Create</strong> a pull request with a
+                        description of your workflow
                       </p>
                     </div>
                   </li>
@@ -125,7 +134,8 @@ export default function SubmitPage() {
                   Option 2: GitHub Issue
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400 mb-4">
-                  Not comfortable with pull requests? Create an issue and we&apos;ll add it for you.
+                  Not comfortable with pull requests? Create an issue and
+                  we&apos;ll add it for you.
                 </p>
 
                 <ol className="space-y-3 mb-6">
@@ -134,7 +144,8 @@ export default function SubmitPage() {
                       1
                     </span>
                     <p className="text-gray-700 dark:text-gray-300">
-                      Create a new issue with title: <code className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded">
+                      Create a new issue with title:{" "}
+                      <code className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded">
                         [Workflow] Your Workflow Name
                       </code>
                     </p>
@@ -144,7 +155,8 @@ export default function SubmitPage() {
                       2
                     </span>
                     <p className="text-gray-700 dark:text-gray-300">
-                      Include: description, category, and paste your workflow JSON
+                      Include: description, category, and paste your workflow
+                      JSON
                     </p>
                   </li>
                 </ol>
@@ -172,31 +184,36 @@ export default function SubmitPage() {
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  <strong>Working workflows only</strong> - Test before submitting
+                  <strong>Working workflows only</strong> - Test before
+                  submitting
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  <strong>Remove credentials</strong> - Never include API keys or secrets
+                  <strong>Remove credentials</strong> - Never include API keys
+                  or secrets
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  <strong>Descriptive names</strong> - Use clear, meaningful workflow names
+                  <strong>Descriptive names</strong> - Use clear, meaningful
+                  workflow names
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  <strong>Add documentation</strong> - Include Sticky Notes explaining the workflow
+                  <strong>Add documentation</strong> - Include Sticky Notes
+                  explaining the workflow
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                 <span className="text-gray-700 dark:text-gray-300">
-                  <strong>Original work</strong> - Only submit workflows you created or have permission to share
+                  <strong>Original work</strong> - Only submit workflows you
+                  created or have permission to share
                 </span>
               </li>
             </ul>

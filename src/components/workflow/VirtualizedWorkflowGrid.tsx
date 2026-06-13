@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useRef } from 'react';
-import { useVirtualizer } from '@tanstack/react-virtual';
-import { WorkflowCard } from './WorkflowCard';
-import type { WorkflowMeta } from '@/types';
-import { cn } from '@/lib/utils';
+import { useRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { WorkflowCard } from "./WorkflowCard";
+import type { WorkflowMeta } from "@/types";
+import { cn } from "@/lib/utils";
 
 interface VirtualizedWorkflowGridProps {
   workflows: WorkflowMeta[];
@@ -15,9 +15,9 @@ interface VirtualizedWorkflowGridProps {
 }
 
 const columnClasses = {
-  2: 'grid-cols-1 sm:grid-cols-2',
-  3: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
-  4: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
+  2: "grid-cols-1 sm:grid-cols-2",
+  3: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
+  4: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
 };
 
 export function VirtualizedWorkflowGrid({
@@ -25,7 +25,7 @@ export function VirtualizedWorkflowGrid({
   columns = 3,
   rowHeight = 320,
   className,
-  emptyMessage = 'No workflows found.',
+  emptyMessage = "No workflows found.",
 }: VirtualizedWorkflowGridProps) {
   const parentRef = useRef<HTMLDivElement>(null);
   const rowCount = Math.max(1, Math.ceil(workflows.length / columns));
@@ -50,8 +50,8 @@ export function VirtualizedWorkflowGrid({
     <div
       ref={parentRef}
       className={cn(
-        'overflow-auto max-h-[70vh] sm:max-h-[75vh] pr-1 focus:outline-none',
-        className
+        "overflow-auto max-h-[70vh] sm:max-h-[75vh] pr-1 focus:outline-none",
+        className,
       )}
     >
       <div
@@ -64,7 +64,10 @@ export function VirtualizedWorkflowGrid({
           return (
             <div
               key={virtualRow.key}
-              className={cn('absolute left-0 right-0 grid gap-4', columnClasses[columns])}
+              className={cn(
+                "absolute left-0 right-0 grid gap-4",
+                columnClasses[columns],
+              )}
               style={{ transform: `translateY(${virtualRow.start}px)` }}
             >
               {items.map((workflow) => (

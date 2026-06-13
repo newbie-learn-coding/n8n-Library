@@ -1,77 +1,87 @@
-import Fuse, { IFuseOptions } from 'fuse.js';
-import { performance } from 'node:perf_hooks';
-import type { FilterState, SearchResponse, WorkflowMeta } from '@/types';
-import { getAllWorkflows, getDatasetMeta } from '@/lib/data';
-import { filterWorkflows, sortWorkflows, withDefaultFilters } from '@/lib/search';
+import type { FilterState, SearchResponse } from "@/types";
+import { getAllWorkflows, getDatasetMeta } from "@/lib/data";
+import {
+  createWorkflowSearchContext,
+  executeWorkflowSearchWithContext,
+  type WorkflowSearchContext,
+} from "@/lib/search/core";
 
-const fuseOptions: IFuseOptions<WorkflowMeta> = {
-  keys: [
-    { name: 'name', weight: 0.4 },
-    { name: 'description', weight: 0.3 },
-    { name: 'integrations', weight: 0.2 },
-    { name: 'categoryName', weight: 0.1 },
-  ],
-  threshold: 0.4,
-  ignoreLocation: true,
-  includeScore: true,
-  minMatchCharLength: 2,
-};
-
-let fuseInstance: Fuse<WorkflowMeta> | null = null;
 let cachedDatasetHash: string | null = null;
+let searchContext: WorkflowSearchContext | null = null;
 
-function getNow(): number {
-  try {
-    return performance.now();
-  } catch {
-    return Date.now();
-  }
-}
+const MAX_SEARCH_CACHE_ENTRIES = 200;
+const searchResponseCache = new Map<string, SearchResponse>();
 
-async function ensureFuse(workflows: WorkflowMeta[], datasetHash: string) {
-  if (!fuseInstance || cachedDatasetHash !== datasetHash) {
-    fuseInstance = new Fuse(workflows, fuseOptions);
+async function ensureSearchContext(datasetHash: string) {
+  if (!searchContext || cachedDatasetHash !== datasetHash) {
+    const workflows = await getAllWorkflows();
+    searchContext = createWorkflowSearchContext(workflows);
     cachedDatasetHash = datasetHash;
+    searchResponseCache.clear();
   }
-  return fuseInstance;
+
+  return searchContext;
 }
 
-function runQuery(workflows: WorkflowMeta[], query: string): WorkflowMeta[] {
-  if (!query.trim()) return workflows;
-  if (!fuseInstance) {
-    throw new Error('Fuse instance not initialized');
+function buildCacheKey(
+  filters: Partial<FilterState>,
+  page: number,
+  pageSize: number,
+  datasetHash: string,
+): string {
+  return JSON.stringify({
+    datasetHash,
+    page,
+    pageSize,
+    filters,
+  });
+}
+
+function cacheSearchResponse(key: string, response: SearchResponse) {
+  if (searchResponseCache.has(key)) {
+    searchResponseCache.delete(key);
   }
-  return fuseInstance.search(query).map((r) => r.item);
+
+  searchResponseCache.set(key, response);
+
+  if (searchResponseCache.size > MAX_SEARCH_CACHE_ENTRIES) {
+    const oldestKey = searchResponseCache.keys().next().value;
+    if (oldestKey) {
+      searchResponseCache.delete(oldestKey);
+    }
+  }
 }
 
 export async function executeWorkflowSearch(
   incomingFilters: Partial<FilterState>,
   page: number,
-  pageSize: number
+  pageSize: number,
 ): Promise<SearchResponse> {
-  const filters = withDefaultFilters(incomingFilters);
-  const start = getNow();
-  const [workflows, meta] = await Promise.all([getAllWorkflows(), getDatasetMeta()]);
+  const meta = await getDatasetMeta();
+  const workflows = searchContext?.workflows ?? (await getAllWorkflows());
   const datasetHash = meta?.datasetHash ?? `len:${workflows.length}`;
-  await ensureFuse(workflows, datasetHash);
-  const searched = filters.query ? runQuery(workflows, filters.query) : workflows;
-  const filtered = filterWorkflows(searched, filters);
-  const sorted = !filters.query || filters.sortBy !== 'relevance'
-    ? sortWorkflows(filtered, filters.sortBy)
-    : filtered;
-
-  const total = sorted.length;
+  const context = await ensureSearchContext(datasetHash);
   const clampedPage = Math.max(1, page);
-  const offset = (clampedPage - 1) * pageSize;
-  const results = sorted.slice(offset, offset + pageSize);
-  const tookMs = Math.round((getNow() - start) * 100) / 100;
-
-  return {
-    results,
-    total,
-    page: clampedPage,
+  const cacheKey = buildCacheKey(
+    incomingFilters,
+    clampedPage,
     pageSize,
-    hasMore: offset + pageSize < total,
-    tookMs,
-  };
+    datasetHash,
+  );
+  const cachedResponse = searchResponseCache.get(cacheKey);
+
+  if (cachedResponse) {
+    return cachedResponse;
+  }
+
+  const response = executeWorkflowSearchWithContext(
+    context,
+    incomingFilters,
+    clampedPage,
+    pageSize,
+  );
+
+  cacheSearchResponse(cacheKey, response);
+
+  return response;
 }
